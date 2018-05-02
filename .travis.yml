@@ -16,11 +16,13 @@ before_cache:
 
 matrix:
   include:
-    - env: CABALVER=1.22 GHCVER=7.10.3
+    - env: CABALVER=2.0 GHCVER=7.10.3
       compiler: ": #GHC 7.10.3"
-      addons: {apt: {packages: [cabal-install-1.22,ghc-7.10.3,happy-1.19.5], sources: [hvr-ghc]}}
+      addons: {apt: {packages: [cabal-install-2.0,ghc-7.10.3,happy-1.19.5], sources: [hvr-ghc]}}
 
-    - env: CABALVER=1.24 GHCVER=8.0.2
+# regex-tdfa runs out of memory with  optimization on ghc-8.0.2,
+# so disable optimizations in that build
+    - env: CABALVER=1.24 GHCVER=8.0.2 CABAL_INSTALL_FLAGS='--disable-optimization'
       compiler: ": #GHC 8.0.2"
       addons: {apt: {packages: [cabal-install-1.24,ghc-8.0.2,happy-1.19.5], sources: [hvr-ghc]}}
 
@@ -31,8 +33,8 @@ matrix:
 #  exclude:
 #    - env: CABALVER=1.18 GHCVER=7.8.4
 
-#  allow_failures:
-#    - env: CABALVER=1.18 GHCVER=7.8.4
+  allow_failures:
+    - env: CABALVER=1.18 GHCVER=7.10.3
 
 before_install:
   - unset CC
