@@ -56,14 +56,15 @@ evalPlugin = newModule
         when b (lim80 (runGHC (dropPrefix txt)))
     }
 
-args :: String -> String -> [String] -> [String] -> [String]
-args load src exts trusted = concat
+args :: String -> String -> [String] -> [String] -> Int -> [String]
+args load src exts trusted timeLimit = concat
     [ ["-S"]
     , map ("-s" ++) trusted
     , map ("-X" ++) exts
     , ["--no-imports", "-l", load]
     , ["--expression=" ++ decodeString src]
     , ["+RTS", "-N", "-RTS"]
+    , ["-t", show timeLimit]
     ]
 
 isEval :: MonadLB m => String -> m Bool
@@ -76,11 +77,12 @@ dropPrefix = dropWhile (' ' ==) . drop 2
 
 runGHC :: MonadLB m => String -> m String
 runGHC src = do
-    load    <- findL_hs
-    binary  <- getConfig muevalBinary
-    exts    <- getConfig languageExts
-    trusted <- getConfig trustedPackages
-    (_,out,err) <- io (readProcessWithExitCode binary (args load src exts trusted) "")
+    load      <- findL_hs
+    binary    <- getConfig muevalBinary
+    exts      <- getConfig languageExts
+    trusted   <- getConfig trustedPackages
+    timeLimit <- getConfig muevalTimeLimit
+    (_,out,err) <- io (readProcessWithExitCode binary (args load src exts trusted timeLimit) "")
     case (out,err) of
         ([],[]) -> return "Terminated\n"
         _       -> do
@@ -141,11 +143,6 @@ moduleProblems (Hs.Module _head pragmas _imports _decls)
         trusted = Hs.name "Trustworthy"
         langs = concat [ ls | Hs.LanguagePragma ls <- pragmas ]
 
-moveFile :: FilePath -> FilePath -> IO ()
-moveFile from to = do
-  copyFile from to
-  removeFile from
-
 -- It parses. then add it to a temporary L.hs and typecheck
 comp :: MonadLB m => Hs.Module -> m String
 comp src = do
@@ -172,7 +169,7 @@ comp src = do
                     return "Error."
                 | otherwise -> do
                     l <- lb (findLBFileForWriting "L.hs")
-                    io (moveFile ".L.hs" l)
+                    io (renameFile ".L.hs" l)
                     return "Defined."
         (ee,[]) -> return ee
         (_ ,ee) -> return ee

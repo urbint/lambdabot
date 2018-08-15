@@ -6,7 +6,7 @@ module Lambdabot.Config.Haskell
     ( evalPrefixes
     , languageExts
     , trustedPackages
-    
+
     , djinnBinary
     , ghcBinary
     , ghciBinary
@@ -14,6 +14,7 @@ module Lambdabot.Config.Haskell
     , muevalBinary
 
     , maxPasteLength
+    , muevalTimeLimit
     ) where
 
 import Lambdabot.Config
@@ -50,4 +51,5 @@ config "hoogleBinary"       [t| String                  |] [| "hoogle"      |]
 config "muevalBinary"       [t| String                  |] [| "mueval"      |]
 
 config "maxPasteLength"     [t| Int                     |] [| 4096 :: Int   |]
+config "muevalTimeLimit"    [t| Int                     |] [| 1 :: Int      |]
 
